@@ -46,7 +46,7 @@ jobs:
         run: npm ci
 
       - name: Build
-        run: npm run build --workspace @ton/${{ steps.get-package.outputs.package }}-sdk
+        run: npx webpack --mode production && npx tsc --declaration --emitDeclarationOnly
 
       - name: Publish
         run: |

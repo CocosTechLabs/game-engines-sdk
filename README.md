@@ -63,7 +63,7 @@ const gameFi = await CocosGameFi.create({ connector: uiconnector });
 | [merchantJettonAddress](https://cocostechlabs.github.io/game-engines-sdk/classes/CocosGameFi.html#merchantJettonAddress) | in-game shop's jetton used as in-game currency |
 
 # Use cases
-To learn complex use cases read [TON GameFi article](https://gist.github.com/barinbritva/b3db1605f2667b7562b53a23877c0e73) and check out the source code of demo [Flappy Bird game](https://github.com/ton-community/flappy-bird).
+To learn complex use cases read [TON GameFi article](https://gist.github.com/barinbritva/b3db1605f2667b7562b53a23877c0e73) and check out the source code of demo [Flappy Bird game](https://github.com/CocosTechLabs/flappy-bird).
 
 # References
 The full [typedoc references](https://cocostechlabs.github.io/game-engines-sdk/index.html).
