@@ -7,10 +7,10 @@ import {
   TonClient4Parameters,
   Cell,
   beginCell,
-  JettonTransferMessage
+  Sender
 } from './external';
-import {WalletConnector, WalletConnectorParams, Wallet, Account, WalletApp} from './interfaces';
-import {TonConnectSender} from './ton-connect-sender';
+import { WalletConnector, WalletConnectorParams, Wallet, Account, WalletApp } from './interfaces';
+import { TonConnectSender } from './ton-connect-sender';
 import {
   IpfsGateway,
   ProxyContentResolver,
@@ -96,9 +96,11 @@ export abstract class GameFiBase {
   public readonly walletConnector: WalletConnector;
   public readonly assetsSdk: AssetsSDK;
   public readonly merchant?: Merchant;
+  public readonly walletSender: TonConnectSender;
 
   constructor(params: GameFiConstructorParams) {
     this.walletConnector = params.walletConnector;
+    this.walletSender = new TonConnectSender(this.walletConnector);
     this.assetsSdk = params.assetsSdk;
     if (params.merchant != null) {
       this.merchant = params.merchant;
@@ -115,6 +117,10 @@ export abstract class GameFiBase {
 
   public get walletAccount(): Account {
     return this.wallet.account;
+  }
+
+  public get sender(): Sender {
+    return this.walletSender
   }
 
   public get walletAddress(): Address {
@@ -145,7 +151,7 @@ export abstract class GameFiBase {
    * Send TON to merchant wallet address (in-game shop).
    */
   public async buyWithTon(params: Omit<TonTransferRequest, 'to'>): Promise<void> {
-    this.transferTon({...params, to: this.merchantAddress});
+    this.transferTon({ ...params, to: this.merchantAddress });
   }
 
   /**
@@ -167,7 +173,7 @@ export abstract class GameFiBase {
    * Send jetton to merchant wallet address (in-game shop).
    */
   public async buyWithJetton(params: Omit<JettonTransferRequest, 'to' | 'jetton'>): Promise<void> {
-    this.transferJetton({...params, to: this.merchantAddress});
+    this.transferJetton({ ...params, to: this.merchantAddress });
   }
 
   /**
@@ -177,22 +183,18 @@ export abstract class GameFiBase {
     const jetton = this.assetsSdk.openJetton(this.merchantJettonAddress);
     const jettonWallet = await jetton.getWallet(this.walletAddress);
 
-    const message: JettonTransferMessage = {
-      amount: params.amount,
-      to: params.to,
-      responseDestination: this.walletAddress
-    };
-    if (params.customPayload != null) {
-      message.customPayload = this.createMessagePayload(params.customPayload);
-    }
-    if (params.forwardAmount != null) {
-      message.forwardAmount = params.forwardAmount;
-    }
-    if (params.forwardPayload != null) {
-      message.forwardPayload = this.createMessagePayload(params.forwardPayload);
+    if (this.assetsSdk.sender == null) {
+      throw new Error("sender can't null");
     }
 
-    return jettonWallet.sendTransfer(message);
+    return await jettonWallet.send(this.assetsSdk.sender, params.to, params.amount, {
+      customPayload: params.customPayload != null ? this.createMessagePayload(params.customPayload) : null as any,
+      returnExcess: true,
+      notify: {
+        amount: params.forwardAmount!=null ? params.forwardAmount: null as any,
+        payload: params.forwardPayload != null ? this.createMessagePayload(params.forwardPayload) : null,
+      }
+    })
   }
 
   /**
@@ -249,6 +251,13 @@ export abstract class GameFiBase {
   }
 
   /**
+   * get AassetSdk object.
+   */
+  public getAssetsSdkInstance() {
+    return this.assetsSdk;
+  }
+
+  /**
    * Call connectWallet programmatically in case
    * you are not going to use TonConnectUI provided UI or game engine provided button
    * and you draw your own UI.
@@ -294,7 +303,7 @@ export abstract class GameFiBase {
   protected static async createDependencies(
     params: GameFiInitializationParams = {}
   ): Promise<GameFiConstructorParams> {
-    const {connector, client, network = 'testnet', merchant} = params;
+    const { connector, client, network = 'testnet', merchant } = params;
 
     const walletConnector = GameFiBase.isTonConnectUiInstance(connector)
       ? connector
@@ -309,7 +318,7 @@ export abstract class GameFiBase {
         const endpoint = await getHttpV4Endpoint({
           network
         });
-        clientParams = {endpoint};
+        clientParams = { endpoint };
       } else {
         clientParams = client;
       }
@@ -318,7 +327,7 @@ export abstract class GameFiBase {
 
     const contentResolverParams: ProxyContentResolverParams = {};
     if (params.contentResolver != null) {
-      const {ipfsGateway, urlProxy} = params.contentResolver;
+      const { ipfsGateway, urlProxy } = params.contentResolver;
       if (ipfsGateway != null) {
         contentResolverParams.ipfsGateway = ipfsGateway;
       }
@@ -335,12 +344,7 @@ export abstract class GameFiBase {
     const contentResolver = new ProxyContentResolver(contentResolverParams);
 
     const assetsSdk = AssetsSDK.create({
-      api: {
-        openExtended: (contract) => {
-          return tonClient.openExtended(contract);
-        },
-        provider: (address, init) => tonClient.provider(address, init)
-      },
+      api: tonClient,
       contentResolver: contentResolver,
       sender: new TonConnectSender(walletConnector)
     });

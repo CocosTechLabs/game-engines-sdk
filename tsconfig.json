@@ -9,7 +9,7 @@
         "module": "CommonJS",
         "moduleResolution": "Node",
         "target": "ES2016",
-        "outDir": "./dist",
+        "outDir": "./lib",
         "declaration": true,
         "resolveJsonModule": true,
         // Checks
@@ -34,5 +34,5 @@
         // Optimizations
         "skipLibCheck": true
     },
-    "include": ["./packages"]
+    "include": ["src"]
 }

@@ -1,20 +1,30 @@
 {
-    "name": "@ton/game-engines-sdk",
+    "name": "@cocos-labs/game-sdk",
     "engines": {
         "node": ">=18.0.0",
         "npm": ">=9.0.0"
     },
-    "workspaces": ["packages/phaser"],
+    "main": "./lib/index.ts",
+    "types": "./lib/index.d.ts",
+    "module": "./lib/index.ts",
     "scripts": {
         "check-types": "tsc --noEmit",
-        "typedoc": "typedoc --out docs packages/phaser/src/index.ts",
+        "typedoc": "typedoc --out docs ./src/index.ts",
         "lint": "prettier --check \"./**/*.{js,jsx,ts,tsx,json,yml}\""
     },
+    "dependencies": {
+        "@orbs-network/ton-access": "^2.3.3",
+        "@ton-community/assets-sdk": "0.0.4",
+        "@ton/ton": "^13.9.0",
+        "@tonconnect/ui": "^2.0.5",
+        "buffer": "^6.0.3",
+        "typescript-declaration-webpack-plugin": "^0.3.0"
+    },
     "devDependencies": {
-        "@types/node": "^20.10.7",
-        "lefthook": "^1.5.5",
-        "typescript": "~5.3.3",
         "typedoc": "^0.25.7",
-        "prettier": "3.2.5"
+        "ts-loader": "^9.5.1",
+        "typescript": "^5.4.5",
+        "webpack": "^5.92.0",
+        "webpack-cli": "^5.1.4"
     }
 }
