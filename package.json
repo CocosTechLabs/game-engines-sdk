@@ -4,7 +4,7 @@
         "node": ">=18.0.0",
         "npm": ">=9.0.0"
     },
-    "version": "0.0.5",
+    "version": "0.0.7",
     "main": "./lib/index.ts",
     "types": "./lib/index.d.ts",
     "module": "./lib/index.ts",

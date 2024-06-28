@@ -28,7 +28,7 @@ module.exports = {
   experiments: {
     outputModule: true,
   },
-  target: ['web', 'browserslist:> 0.5%, not dead'],
+  target: ['web', 'browserslist:> 0.5%'],
   externals: [],
   plugins: [
     new webpack.ProvidePlugin({
